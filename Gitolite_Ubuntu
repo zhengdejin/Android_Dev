@@ -1,0 +1,189 @@
+1	创建系统用户git
+root@cserv:/home# adduser --system --shell /bin/bash --group git
+Adding system user `git' (UID 120) ...
+Adding new group `git' (GID 127) ...
+Adding new user `git' (UID 120) with group `git' ...
+Creating home directory `/home/git' …
+
+2	添加git到ssh组
+root@cserv:/home# adduser git ssh
+Adding user `git' to group `ssh' ...
+Adding user git to group ssh
+Done.
+
+3	设置git口令
+root@cserv:/home# passwd git
+Enter new UNIX password:
+Retype new UNIX password:
+passwd: password updated successfully
+
+4	安装gitolite
+root@cserv:/home# cd git/
+root@cserv:/home/git# ls
+root@cserv:/home/git# apt-get install gitolite git-core
+Reading package lists... Done
+Building dependency tree
+Reading state information... Done
+git-core is already the newest version.
+gitolite is already the newest version.
+The following package was automatically installed and is no longer required:
+  libtinfo-dev:i386
+Use 'apt-get autoremove' to remove it.
+0 upgraded, 0 newly installed, 0 to remove and 345 not upgraded.
+
+5	切换到cserver用户
+root@cserv:/home/git# su cserver
+root@cserv:/home/git# cd
+cserver@cserv:~$ pwd
+/home/cserver
+cserver@cserv:~$
+
+6	生成cserver用户的ssh key
+cserver@cserv:~$ ssh-keygen -t rsa
+
+7	把cserver的id_rsa.pub作为管理员公钥
+cserver@cserv:~$ cp .ssh/id_rsa.pub admin.pub
+cserver@cserv:~$ ls
+admin.pub
+cserver@cserv:~$ sudo -s
+root@cserv:/home/git# cp admin.pub /tmp/
+
+8	切换到git用户
+root@cserv:/home/git# su git
+git@cserv:~$ pwd
+/home/git
+
+9	创建/初始化仓库
+git@cserv:~$ gl-setup /tmp/admin.pub
+The default settings in the rc file (/home/git/.gitolite.rc) are fine for most
+people but if you wish to make any changes, you can do so now.
+
+hit enter...
+
+Select an editor.  To change later, run 'select-editor'.
+  1. /bin/ed
+  2. /bin/nano        <---- easiest
+  3. /usr/bin/vim.tiny
+
+Choose 1-3 [2]: 3
+creating gitolite-admin...
+Initialized empty Git repository in /home/git/repositories/gitolite-admin.git/
+creating testing...
+Initialized empty Git repository in /home/git/repositories/testing.git/
+[master (root-commit) 50d8083] start
+ 2 files changed, 6 insertions(+)
+ create mode 100644 conf/gitolite.conf
+ create mode 100644 keydir/admin.pub
+
+10	显示所有生成的文件
+git@cserv:~$ ls -all
+total 40
+drwxr-xr-x  5 git  git  4096  6月 13 12:25 .
+drwxr-xr-x 24 root root 4096  6月 13 12:09 ..
+-rw-r--r--  1 git  git   391  6月 13 12:20 admin.pub
+-rw-------  1 git  git   109  6月 13 12:20 .bash_history
+drwx------  8 git  git  4096  6月 13 12:25 .gitolite
+-rw-r--r--  1 git  git  4217  6月 13 12:25 .gitolite.rc
+-rw-------  1 git  git     0  6月 13 12:25 projects.list
+drwx------  4 git  git  4096  6月 13 12:25 repositories
+-rw-rw-r--  1 git  git    74  6月 13 12:25 .selected_editor
+drwx------  2 git  git  4096  6月 13 12:25 .ssh
+
+11	切换到cserver用户
+root@cserv:~# su cserver
+cserver@cserv:~$
+
+12	clone出gitolite-admin.git
+cserver@cserv:~$ cd git-admin/
+cserver@cserv:~/git-admin$ ls
+cserver@cserv:~/git-admin$ git clone git@192.168.100.250:gitolite-admin.git
+Cloning into 'gitolite-admin'...
+remote: Counting objects: 6, done.
+remote: Compressing objects: 100% (4/4), done.
+remote: Total 6 (delta 0), reused 0 (delta 0)
+Receiving objects: 100% (6/6), done.
+cserver@cserv:~/git-admin$ ls
+gitolite-admin
+
+13	添加/配置 用户&仓库
+cserver@cserv:~/git-admin$ cd gitolite-admin/
+cserver@cserv:~/git-admin/gitolite-admin$ ls
+conf  keydir
+cserver@cserv:~/git-admin/gitolite-admin$ cd keydir/
+cserver@cserv:~/git-admin/gitolite-admin/keydir$ ls
+admin.pub
+cserver@cserv:~/git-admin/gitolite-admin/keydir$ cp /home/sc.rel/.ssh/id_rsa.pub .	
+cserver@cserv:~/git-admin/gitolite-admin$ ls
+conf  keydir
+cserver@cserv:~/git-admin/gitolite-admin$ git status
+# On branch master
+# Untracked files:
+#   (use ""git add <file>..."" to include in what will be committed)
+#
+#       keydir/sci.pub
+nothing added to commit but untracked files present (use ""git add"" to track)
+cserver@cserv:~/git-admin/gitolite-admin$ git add keydir/sci.pub
+cserver@cserv:~/git-admin/gitolite-admin$ git commit -m "add ssh key for SCI"
+[master db72340] add ssh key for SCI
+ 1 file changed, 1 insertion(+)
+ create mode 100644 keydir/sci.pub
+cserver@cserv:~/git-admin/gitolite-admin$ git push
+Counting objects: 6, done.
+Delta compression using up to 8 threads.
+Compressing objects: 100% (4/4), done.
+Writing objects: 100% (4/4), 684 bytes, done.
+Total 4 (delta 0), reused 0 (delta 0)
+remote:
+remote:                 ***** WARNING *****
+remote:         the following users (pubkey files in parens) do not appear in any access rules:
+remote: sci(sci.pub)
+To git@192.168.100.250:gitolite-admin.git
+   a8c8156..db72340  master -> master
+cserver@cserv:~/git-admin/gitolite-admin$ ls
+conf  keydir
+cserver@cserv:~/git-admin/gitolite-admin$ cd keydir/
+cserver@cserv:~/git-admin/gitolite-admin/keydir$ cp /home/tk/.ssh/id_rsa.pub .
+cserver@cserv:~/git-admin/gitolite-admin/keydir# cd ..
+cserver@cserv:~/git-admin/gitolite-admin# ls
+conf  keydir
+cserver@cserv:~/git-admin/gitolite-admin# cd conf/
+cserver@cserv:~/git-admin/gitolite-admin/conf# vi gitolite.conf
+{
+### modify by TK.ZHENG
+@team1 = tk
+@team2 = sci
+
+repo    gitolite-admin
+        RW+     =   admin
+
+repo    testing
+        RW+     =   @team1
+        R       =   @team2
+}
+cserver@cserv:~/git-admin/gitolite-admin/conf# cd ..
+cserver@cserv:~/git-admin/gitolite-admin# git status
+# On branch master
+# Changes not staged for commit:
+#   (use ""git add <file>..."" to update what will be committed)
+#   (use ""git checkout -- <file>..."" to discard changes in working directory)
+#
+#       modified:   conf/gitolite.conf
+#
+# Untracked files:
+#   (use ""git add <file>..."" to include in what will be committed)
+#
+#       keydir/tk.pub
+no changes added to commit (use ""git add"" and/or ""git commit -a"")"	
+cserver@cserv:~/git-admin/gitolite-admin# git add conf/gitolite.conf keydir/tk.pub
+cserver@cserv:~/git-admin/gitolite-admin# git commit -m "add user: tk"
+[master d070ad2] add user: tk
+ 2 files changed, 7 insertions(+), 1 deletion(-)
+ create mode 100644 keydir/tk.pub
+cserver@cserv:~/git-admin/gitolite-admin$ git push
+Counting objects: 10, done.
+Delta compression using up to 8 threads.
+Compressing objects: 100% (5/5), done.
+Writing objects: 100% (6/6), 874 bytes, done.
+Total 6 (delta 0), reused 0 (delta 0)
+To git@192.168.100.250:gitolite-admin.git
+   4a0e1e4..d070ad2  master -> master
