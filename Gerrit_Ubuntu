@@ -1,0 +1,80 @@
+Gerrit服务搭建基本方法
+
+
+[download the required packages]
+from: https://gerrit-releases.storage.googleapis.com/gerrit-2.8.1.war
+
+[Install]
+$ cd /home/git
+$ java -jar gerrit-2.8.1.war init  -d ~/gerrit
+{ init the gerrir configuration, below is sample }
+*** Gerrit Code Review 2.8.1
+Opening http://192.168.100.252/review/#/admin/projects/ ...OK
+
+
+[configure gerrit]
+$ cd /home/git/gerrit
+$ ls
+bin  cache  data  db  etc  git lib  logs  plugins  static  tmp
+$ vi etc/gerrit.config
+[gerrit]
+        directory = cache
+
+$ ./home/git/gerrit/bin/gerrit.sh restart
+Stopping Gerrit Code Review: OK
+Starting Gerrit Code Review: OK
+
+[configure httpd]
+$ vi /etc/apache2/httpd.conf
+# add by TK, 2014-03-07
+</VirtualHost>
+$ touch /home/git/gerrit.passwd
+$ htpasswd -b ./gerrit.passwd admin xxxx
+$ htpasswd -b ./gerrit.passwd tk xxxx
+……
+
+$ vi /etc/apache2/apache2.conf
+# This is the main Apache server configuration file.  It contains the
+ServerName 192.168.100.252
+
+$ vi /etc/apache2/ports.conf
+# If you just change the port or add more ports here, you will likely also
+</IfModule>
+$ vi /etc/apache2/mods-available/proxy.conf
+<IfModule mod_proxy.c>
+</IfModule>
+
+$ touch /etc/apache2/mods-enabled/proxy_http.load
+$ vi /etc/apache2/mods-enabled/proxy_http.load
+# Depends: proxy
+LoadModule proxy_http_module /usr/lib/apache2/modules/mod_proxy_http.so
+
+$ service apache2 restart
+$ ./home/git/gerrit/bin/gerrit.sh restart
+
+
+
+
+[operations on client side]
+在IE等浏览器中，输入并打开：http://192.168.100.252/review/
+登录的第一个账号，将作为admin账号写入数据库；
+登入后，可以设置用户全名，注册E-mail，添加要跟踪的项目，添加SSH公钥，生成个人HTTP口令等等操作；
+Admin更是具有全部管理权限；
+注意：
+注册邮件后，Server会发送一封确认邮件到用户的注册邮箱里；
+形式如下：
+Welcome to Gerrit Code Review at 192.168.100.252.
+
+To add a verified email address to your user account, please click on the following link while signed in as TK.ZHENG:
+
+http://192.168.100.252/#/VE/4PxdUfBcZVmrp+ftTfaQz8AXyl1Dus9OtYeIaQ==$MTAwMDAwMTp6aGVuZ2RqQGhhaWVydWJpYy5jb20=
+
+If you have received this mail in error, you do not need to take any action to cancel the account.  The address will not be activated, and you will not receive any further emails.
+
+If clicking the link above does not work, copy and paste the URL in a new browser window instead.
+
+This is a send-only email address.  Replies to this message will not be read or answered.
+一般来说，直接点击链接，即可完成确认；
+针对我们的示例项目，需要修正为如下链接:
+http://192.168.100.252/review/#/VE/4PxdUfBcZVmrp+ftTfaQz8AXyl1Dus9OtYeIaQ==$MTAwMDAwMTp6aGVuZ2RqQGhhaWVydWJpYy5jb20=
+确认成功后，用户登入后，会在页面右上角的位置，显示用户全名，用户全名下面会显示经过验证的邮箱地址；
