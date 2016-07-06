@@ -1,0 +1,31 @@
+Samba服务搭建基本方法
+
+[configure samba user] (ex. User is xxx)
+$ sudo useradd xxx -g sw -m
+$ sudo adduser xxx sw
+$ sudo adduser xxx mobile
+$ sudo smbpasswd -a xxx
+
+[configure samba service]
+$ sudo vi /etc/samba/smb.conf
+[tk]
+    comment = folder for TK
+    path = /home/len/tk
+    public = yes
+    create mask = 0754
+    valid users = @driver
+    read list = @driver
+    write list = tk
+
+[Restart samba service]
+$ sudo /etc/init.d/smbd restart
+or
+$ sudo service smbd restart
+
+[remark]
+method to clear login inf of samba on Win OS :
+点击“开始”菜单 → 运行 → 输入 “control userpasswords2”
+→ 弹出 “用户帐户” 对话框，再切换到 “高级” 选项卡
+→ 点击 "管理密码" (可以看到网络设置记录的密码都保存在这个弹出来的"存储用户名和密码"的对话框里)
+→ 选择想要删除的记录点“删除”
+→ 再注销/重启电脑
