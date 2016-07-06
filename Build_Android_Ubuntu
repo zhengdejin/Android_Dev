@@ -1,0 +1,69 @@
+在Ubuntu 14.04(64bit)上搭建Android编译环境（通用版）
+
+1. update package list
+$ sudo apt-get update
+
+2. install required packages
+$ sudo apt-get install git gnupg flex bison gperf 
+$ sudo apt-get install build-essential zip curl libc6-dev libncurses5-dev:i386 x11proto-core-dev libx11-dev:i386 libreadline6-dev:i386 libgl1-mesa-dev
+$ sudo apt-get install g++-multilib mingw32 tofrodos python-markdown libxml2-utils xsltproc zlib1g-dev:i386 gawk
+
+3. install JDK
+# download jdk-6u45-linux-x64.bin (from Sun official website: http://www.oracle.com/technetwork/java/javase/downloads/java-archive-downloads-javase6-419409.html)
+# install JDK
+$ sudo mkdir /usr/lib/jvm
+$ sudo cp jdk-6u45-linux-x64.bin /usr/lib/jvm/
+$ sudo chmod +x jdk-6u45-linux-x64.bin
+$ sudo ./jdk-6u45-linux-x64.bin
+# set environment
+$ sudo mv jdk1.6.0_45/ jdk6
+$ export JAVA_HOME=/usr/lib/jvm/jdk6
+$ export JRE_HOME=${JAVA_HOME}/jre
+$ export CLASSPATH=.:${JAVA_HOME}/lib:${JRE_HOME}/lib
+$ export PATH=${JAVA_HOME}/bin:$PATH
+# enable environment
+source ~/.bashrc
+# set JDK as default
+$ sudo update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk6/bin/java 300
+$ sudo update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/jdk6/bin/javac 300
+$ sudo update-alternatives --config java
+# check java version
+$ java -version
+
+4. download android (and kernel if necessary)
+# get repo
+$ mkdir ~/bin
+$ PATH=~/bin:$PATH
+$ curl https://dl-ssl.google.com/dl/googlesource/git-repo/repo > ~/bin/repo
+$ chmod a+x ~/bin/repo
+
+# get android 4.2.2 r1 branch (example)
+$ mkdir jbean
+$ cd jbean
+$ repo init -u https://android.googlesource.com/platform/manifest -b android-4.2.2_r1
+$ repo sync
+
+# get android common kernel (example)
+$ cd 
+$ mkdir kernel
+$ cd kernel
+$ git clone https://android.googlesource.com/kernel/common.git
+$ cd common/.git/
+$ git branch -a
+* master
+  remotes/origin/HEAD -> origin/master
+  remotes/origin/android-2.6.39
+  remotes/origin/android-3.0
+  remotes/origin/android-3.3
+  remotes/origin/android-3.4
+  remotes/origin/android-3.4-compat
+  remotes/origin/coupled-cpuidle
+  remotes/origin/experimental/android-3.10
+  remotes/origin/experimental/android-3.10-rc5
+  remotes/origin/experimental/android-3.8
+  remotes/origin/experimental/android-3.9
+  remotes/origin/experimental/android-3.9-rc2
+  remotes/origin/experimental/android-3.9-rc7
+  remotes/origin/linux-bcm43xx-2.6.39
+  remotes/origin/master
+$ git checkout -t origin/android-3.4 -b kernel
