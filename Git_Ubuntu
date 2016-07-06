@@ -1,0 +1,116 @@
+Git基本使用方法
+
+tei@tei-pc:~/work/umob_src$ git help
+usage: git [--version] [--exec-path[=<path>]] [--html-path] [--man-path] [--info-path]
+           [-p|--paginate|--no-pager] [--no-replace-objects] [--bare]
+           [--git-dir=<path>] [--work-tree=<path>] [--namespace=<name>]
+           [-c name=value] [--help]
+           <command> [<args>]
+
+The most commonly used git commands are:
+   add        Add file contents to the index
+   bisect     Find by binary search the change that introduced a bug
+   branch     List, create, or delete branches
+   checkout   Checkout a branch or paths to the working tree
+   clone      Clone a repository into a new directory
+   commit     Record changes to the repository
+   diff       Show changes between commits, commit and working tree, etc
+   fetch      Download objects and refs from another repository
+   grep       Print lines matching a pattern
+   init       Create an empty git repository or reinitialize an existing one
+   log        Show commit logs
+   merge      Join two or more development histories together
+   mv         Move or rename a file, a directory, or a symlink
+   pull       Fetch from and merge with another repository or a local branch
+   push       Update remote refs along with associated objects
+   rebase     Forward-port local commits to the updated upstream head
+   reset      Reset current HEAD to the specified state
+   rm         Remove files from the working tree and from the index
+   show       Show various types of objects
+   status     Show the working tree status
+   tag        Create, list, delete or verify a tag object signed with GPG
+
+See 'git help <command>' for more information on a specific command.
+
+
+* 创建一个新的仓库
+1} On server side:
+# cd /home/git/repositories
+# mkdir test.git
+# cd test.git
+# git --bare init
+# chmod 777 -R ../test.git
+
+2} On user side:
+# cd ${workdir}
+# git clone git@192.168.100.252:/home/git/repositories/test.git
+
+# touch readme.txt
+# cat "Test for git access" >> readme.txt
+(# git remote add origin git@192.168.100.252:/home/git/repositories/test.git)
+# git add readme.txt
+# git commit -m "readme.txt"
+# git push origin master
+
+3} Add new branch:
+# cd ${workdir}/{target_git}/
+# git branch -a
+# git checkout -b {local_branch_name}
+# git push origin {local_branch_name}:{remote_branch_name}
+
+4} Merge branch: (ex. merge {branch#y} to {branch#x})
+# git checkout {branch#x}
+# git merge {branch#y}
+
+
+
+
+* Git常用命令
+# git branch
+# git branch -r
+# git checkout xx
+# git checkout -b xx
+# git pull
+# git pull git@192.168.100.250:/home/git/repositories/test.git xx
+# git status
+# git rm xxx
+# git log
+# git diff {commit_hash_code_1} {commit_hash_code_2}
+# git cherry-pick {commit_hash_code}
+# git fetch
+
+
+* 备份仓库
+1} On backup side:
+# cd /home/git_backup/repositories
+# git clone --mirror git@192.168.1.250:{$TARGET}.git
+
+
+* 删除远程分支
+
+# git branch -a
+# git push origin  :{remote_branch_name}
+本质上，就是推送一个空内容到远程分支上，达到删除效果。
+
+* 批量cherry-pick
+Git从1.7.2版本开始支持批量cherry-pick，就是一次可以cherry-pick一个区间的commit;
+# git cherry-pick <start-commit-id>..<end-commit-id>
+# git cherry-pick <start-commit-id>^..<end-commit-id>
+
+前者表示把<start-commit-id>到<end-commit-id>之间(左开右闭，不包含start-commit-id)的提交cherry-pick到当前分支；
+后者表示把<start-commit-id>到<end-commit-id>之间(闭区间，包含start-commit-id)的提交cherry-pick到当前分支。
+其中，<start-commit-id>到<end-commit-id>只需要commit-id的前6位即可，并且<start-commit-id>在时间上必须早于<end-commit-id>
+
+
+* tag操作
+打tag
+"# git add {files}                                增加文件
+# git commit -m “comments”                       添加备注信息
+# git tag -a {tag-name} -m “comments for tag″   增加tag"
+# git push origin master                         提交修改到远程服务器{master或其他}分支
+# git push origin --tags                         提交tag到远程服务器
+
+删除tag
+# git tag -d {tag-name}                          删除本地tag
+# git push origin :refs/tags/{tag-name}          删除远程服务器上的tag
+
